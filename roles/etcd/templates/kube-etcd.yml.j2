@@ -1,0 +1,9 @@
+apiVersion: "kubeadm.k8s.io/v1beta2"
+kind: ClusterConfiguration
+etcd:
+  local:
+    serverCertSANs:
+{% for item in groups['etcd'] %}      - "{{item}}"{{'\n'}}{% endfor %}
+    peerCertSANs:
+{% for item in groups['etcd'] %}      - "{{item}}"{{'\n'}}{% endfor %}
+

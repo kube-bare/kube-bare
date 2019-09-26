@@ -1,0 +1,47 @@
+global_defs {
+  router_id LVS_DEVEL
+  script_user root
+  enable_script_security
+}
+
+vrrp_script chk_process {
+    script "killall -0 kube-apiserver"
+    interval 1
+    weight -20
+    timeout 2
+    fall 2
+    rise 1
+}
+vrrp_script chk_tcp_port {
+    script "/usr/bin/timeout 1 /bin/bash -c '</dev/tcp/127.0.0.1/{{lb_endpoint_port}}'"
+    interval 1
+    weight -20
+    timeout 2
+    fall 2
+    rise 1
+}
+vrrp_instance VI_1 {
+  state BACKUP
+  virtual_router_id 200
+  advert_int 1
+  authentication {
+     auth_type PASS
+     auth_pass password
+  }
+  track_script {
+    chk_tcp_port
+  }
+  nopreempt
+  interface {{ansible_default_ipv4.interface|default(lb_keepalived_iface)|default(ansible_interfaces[0])}}
+  virtual_ipaddress {           # VIP
+    {{lb_endpoint_addr}}/24 dev {{ansible_default_ipv4.interface|default(lb_keepalived_iface)|default(ansible_interfaces[0])}} label {{ansible_default_ipv4.interface|default(lb_keepalived_iface)|default(ansible_interfaces[0])}}:1
+  }
+  priority {% for item in groups['lb'] %}{%   if inventory_hostname == item %}{{ 100 + loop.index|int }}{% endif %}{% endfor %}                      # higher on master, lower on backup
+  unicast_src_ip {{ inventory_hostname }}         # My IP
+  unicast_peer {                                  # Peer IP
+  {% for item in groups['lb'] %}{%   if inventory_hostname != item %}{{"    " + item + '\n' }}{% endif %}{% endfor %}
+  }
+
+}
+
+

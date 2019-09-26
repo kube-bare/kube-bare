@@ -1,0 +1,9 @@
+---
+# prepare hosts 
+- hosts: "{{ hosts | default('etcd,lb,master,node') | default('localhost')}}"
+  gather_facts: smart
+  remote_user: root
+
+  roles:
+  - init
+

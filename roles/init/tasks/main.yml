@@ -1,0 +1,195 @@
+- ping:
+
+- name: gather ip info
+  setup:
+  when: "ansible_default_ipv4 is not defined"
+
+# OSX : not support
+- name : check system osx
+  fail: 
+    msg: "FATAL: Please Run on Linux, NOT SUPPORT OSX"
+  when: ansible_os_family == "Darwin"
+
+- name: swap off
+  shell: swapoff -a
+
+- name: swap off /etc/fstab
+  shell: sed -ri '/\sswap\s/s/^#?/#/' /etc/fstab
+
+- name: disable selinux
+  shell: test -f /etc/selinux/config && setenforce 0 && sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/selinux/config
+  when: ansible_os_family == "CentOS"
+
+- name: disable firewalld
+  shell: systemctl stop firewalld && systemctl disable firewalld
+  when: ansible_os_family == "CentOS"
+
+
+# modprobe
+- name: set the ip_vs module params
+  shell:  echo options ip_vs conn_tab_bits=20 | tee /etc/modprobe.d/ip_vs.conf
+  when: ansible_system == "Linux"
+
+- name: modprobe ip_vs
+  modprobe:
+      name: "{{ item }}" # required. Name of kernel module to manage.
+      state: present # not required. choices: absent;present. Whether the module should be present or absent.
+  with_items: "{{ modprobe_lists }}"
+  when: ansible_system == "Linux"
+
+- name: modprobe nf_conntrack_ipv4 when kernel < 4.19
+  modprobe:
+      name: nf_conntrack_ipv4 # required. Name of kernel module to manage.
+      state: present # not required. choices: absent;present. Whether the module should be present or absent.
+  when: ansible_system == "Linux" and ansible_kernel is version_compare('4.19', '<')
+
+- name: apt install base packages
+  apt: 
+    name:
+      - ca-certificates
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: cn mirror for ubuntu
+  shell: sed -i -e 's@ .*.ubuntu.com@ https://mirrors.ustc.edu.cn@g' -e 's@ .*.debian.org@ https://mirrors.ustc.edu.cn@g' /etc/apt/sources.list
+  when:  ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+# debian
+- name: Add an Apt signing key for docker
+  apt_key:
+    url: https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add an Apt signing key for kubernetes
+  apt_key:
+    url: https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add an Apt signing key for ceph
+  apt_key:
+    url: https://mirrors.aliyun.com/ceph/keys/release.asc
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add an Apt signing key for etcd
+  apt_key:
+    url: https://coreos.com/dist/pubkeys/app-signing-pubkey.gpg
+    state: present
+  when: ansible_os_family == "Debian"
+
+# - name: rm kubebare apt list
+#   shell: rm -rf /etc/apt/sources.list.d/kubebare-*.list
+#   when: ansible_os_family == "Debian"
+
+- name: Add an Apt Repository for docker
+  apt_repository:
+    repo: deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu/ {{ ansible_distribution_release }}  stable 
+    state: present
+    filename: kubebare-docker
+  when: ansible_os_family == "Debian"
+
+- name: Add an Apt Repository for kubernetes
+  apt_repository:
+    repo: deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main 
+    state: present
+    filename: kubebare-kubernetes
+  when: ansible_os_family == "Debian"
+
+- name: Add an Apt Repository for ceph
+  apt_repository:
+    repo: deb https://mirrors.aliyun.com/ceph/debian-nautilus/ {{ ansible_distribution_release }}  main 
+    state: present
+    filename: kubebare-ceph
+  when: ansible_os_family == "Debian"
+
+# centos 
+- name: Import  kubernetes rpm gpg key
+  rpm_key:
+    key: https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+    state: present
+  when: ansible_os_family == "CentOS"
+
+- name: Import  etcd yum gpg key
+  rpm_key:
+    key: https://coreos.com/dist/pubkeys/app-signing-pubkey.gpg
+    state: present
+  when: ansible_os_family == "CentOS"
+
+# - name: Add an Yum Repository for EPEL
+#   yum_repository:
+#     name: epel
+#     description: EPEL YUM repo
+#     baseurl: https://mirrors.aliyun.com/epel/$releasever/$basearch/
+#     gpgkey: https://mirrors.aliyun.com/ceph/keys/release.asc
+#   when: ansible_os_family == "CentOS"
+
+- name: Add an Yum Repository for docker
+  yum_repository:
+    name: docker
+    description: docker YUM repo
+    baseurl: https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/stable
+    gpgkey: https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+  when: ansible_os_family == "CentOS"
+
+- name: Add an Yum Repository for kubernetes
+  yum_repository:
+    name: kubernetes
+    description: kubernetes YUM repo
+    baseurl: https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-$basearch
+    gpgkey: https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+  when: ansible_os_family == "CentOS"
+
+- name: Add an Yum Repository for ceph
+  yum_repository:
+    name: ceph
+    description: ceph YUM repo
+    baseurl: https://mirrors.aliyun.com/ceph/rpm-nautilus/el7/$basearch/
+    gpgkey: https://mirrors.aliyun.com/ceph/keys/release.asc
+  when: ansible_os_family == "CentOS"
+
+# install package 
+
+- name: apt install base packages
+  apt: 
+    name:
+      - docker-ce
+      - kubeadm
+      - ipset
+      - etcd-client
+      - rsync
+    state: present
+  # tags:
+  #   - packages
+  when: ansible_os_family == "Debian"
+
+- name: yum install a list of packages
+  yum:
+    name:
+      - docker-ce
+      - kubeadm
+      - ipset
+      - rsync
+    state: present
+  when: ansible_os_family == "CentOS"
+
+# kernel tune   ansible_system == "Linux"
+- name: set sysctl rules
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    ignoreerrors: "{{ sysctl_ignore_errors }}"
+    sysctl_file: /etc/sysctl.d/66-k8s.conf
+  with_dict: "{{ sysctl_rules }}"
+
+  when: 
+    - sysctl_rules is defined
+    - ansible_system == "Linux"
+  tags: [sysctl]
+
+
+
+
+
+

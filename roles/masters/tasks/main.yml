@@ -1,0 +1,4 @@
+- name: master join kube cluster
+  shell: $(kubeadm token create --print-join-command) --control-plane
+  when: (inventory_hostname) != groups.master[0]  and (inventory_hostname) in groups.master
+

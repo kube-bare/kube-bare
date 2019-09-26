@@ -1,0 +1,64 @@
+- name: gather ip info
+  setup:
+  when: "ansible_default_ipv4 is not defined"
+
+- name: conf dir
+  file:
+      path: /etc/kubernetes/yml
+      state: directory 
+
+- name: copy hube-ha.yml
+  template:
+    src: kube-ha.yml.j2
+    dest: /etc/kubernetes/yml/kube-ha.yml
+
+# sync etcd certs
+- name: rsync pki conf for kubernetes
+  synchronize:
+    src: /etc/kubernetes/pki/
+    dest: /etc/kubernetes/pki/
+  delegate_to: "{{ groups.master[0]}}"
+
+- name: kube int dry-run
+  shell: kubeadm init --config /etc/kubernetes/yml/kube-ha.yml --dry-run
+  delegate_to: "{{ groups.master[0]}}"
+
+- name: kube int dry-run
+  shell: kubeadm init --config /etc/kubernetes/yml/kube-ha.yml --dry-run
+  when: (inventory_hostname) != groups.master[0]
+
+
+- name: kube int 
+  shell: kubeadm init --config /etc/kubernetes/yml/kube-ha.yml --upload-certs
+  when: (inventory_hostname) == groups.master[0]
+
+- name: rsync admin.conf for kubernetes
+  synchronize:
+    src: /etc/kubernetes/admin.conf
+    dest: /etc/kubernetes/admin.conf
+  delegate_to: "{{ groups.master[0]}}"
+
+- name: rsync pki conf for kubernetes
+  synchronize:
+    src: /etc/kubernetes/pki/
+    dest: /etc/kubernetes/pki/
+  delegate_to: "{{ groups.master[0]}}"
+
+- name: mkdir dir /root/.kube
+  file:
+      path: /root/.kube
+      state: directory 
+
+- name: init kubectl conf file
+  file:
+      path: /root/.kube/config 
+      src: /etc/kubernetes/admin.conf 
+      force: no 
+      state: link 
+
+# - name: init kubectl conf file
+#   shell: test -f /root/.kube/config || ln -s /etc/kubernetes/admin.conf  /root/.kube/config
+
+#- name: kube cni 
+#  shell: kubectl create -f /etc/kubernetes/yml/kube-flannel.yml
+

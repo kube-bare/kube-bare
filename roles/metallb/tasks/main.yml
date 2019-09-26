@@ -1,0 +1,16 @@
+- name: copy metallb.yaml
+  template:
+    src: metallb.yaml.j2
+    dest: /etc/kubernetes/yml/metallb.yaml
+
+- name: copy metallb-conf.yaml
+  template:
+    src: metallb-conf.yaml.j2
+    dest: /etc/kubernetes/yml/metallb-conf.yaml
+
+- name: kubectl metallb.yaml
+  shell: kubectl apply -f /etc/kubernetes/yml/metallb.yaml
+
+- name: kubectl metallb-conf.yaml
+  shell: kubectl apply -f /etc/kubernetes/yml/metallb-conf.yaml
+

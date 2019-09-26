@@ -1,0 +1,9 @@
+---
+# to install a mini single node cluster for dev or test environment 
+#- hosts: mini
+- hosts: "{{ hosts | default('master[0]') | default('localhost')}}"
+  gather_facts: smart
+  remote_user: root
+
+  roles:
+  - dashboard

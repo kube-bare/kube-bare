@@ -1,0 +1,17 @@
+---
+# to install a mini single node cluster for dev or test environment 
+#- hosts: mini
+- hosts: "{{ hosts | default('localhost')}}"
+  gather_facts: smart
+  remote_user: root
+
+  vars_prompt:
+    - name: prompt_kubeadm_reset
+      prompt: "install a new single node kubernetes, are you sure?[N/Y]"
+      private: no
+      default: "N"
+
+  roles:
+  - init
+  - mini
+  - status

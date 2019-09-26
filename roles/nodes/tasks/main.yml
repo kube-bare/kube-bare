@@ -1,0 +1,29 @@
+
+- name: genarate token for nodes join kube cluster
+  shell: kubeadm token create --print-join-command
+  register: kubeadm_join_cmd
+  delegate_to: "{{ groups.master[0]}}"
+
+# sync etcd certs
+# - name: rsync pki conf for kubernetes
+#   synchronize:
+#     src: /etc/kubernetes/pki/
+#     dest: /etc/kubernetes/pki/
+#   delegate_to: "{{ groups.master[0]}}"
+
+- name: kubeadm reset node
+  shell: "kubeadm reset -f"
+  when: (inventory_hostname) != groups.master[0] 
+
+- name: kubeadm reset node
+  shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && ipvsadm --clear
+  when: (inventory_hostname) != groups.master[0]
+
+- name: kubeadm reset node
+  shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && ipvsadm --clear && systemctl restart kubelet
+  when: (inventory_hostname) != groups.master[0]
+
+- name: node join kube cluster
+  shell: "{{kubeadm_join_cmd.stdout.strip()}}"
+  when: (inventory_hostname) != groups.master[0]  and (inventory_hostname) in groups.node
+

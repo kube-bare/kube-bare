@@ -1,0 +1,12 @@
+sysctl_ignore_errors: "yes"
+sysctl_rules:
+  vm.swappiness: 0
+  net.ipv4.ip_forward: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.bridge.bridge-nf-call-iptables: 1
+modprobe_lists:
+  - ip_vs
+  - ip_vs_rr
+  - ip_vs_wrr
+  - ip_vs_sh
+  - nf_conntrack

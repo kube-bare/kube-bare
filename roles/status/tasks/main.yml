@@ -1,0 +1,12 @@
+- name: kubectl get nodes -o wide
+  shell: kubectl get nodes -o wide
+  register:  kubectl_nodes
+
+- name: kubectl get all,nodes --all-namespaces -o wide
+  shell: kubectl get pods -o wide --all-namespaces
+  register:  kubectl_pods
+
+- debug: var=kubectl_nodes.stdout_lines
+
+- debug: var=kubectl_pods.stdout_lines
+

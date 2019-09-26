@@ -1,0 +1,14 @@
+
+# https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+
+- name: copy kubernetes-dashboard.yaml
+  template:
+    src: kubernetes-dashboard.yaml.j2
+    dest: /etc/kubernetes/yml/kubernetes-dashboard.yaml
+
+- name: sed /etc/kubernetes/yml/kubernetes-dashboard.yaml
+  shell: sed -i -e 's?quay.io?quay.azk8s.cn?g' -e 's?k8s.gcr.io?gcr.azk8s.cn/google-containers?g'  /etc/kubernetes/yml/kubernetes-dashboard.yaml
+
+- name: kubectl kubernetes-dashboard.yaml
+  shell: kubectl apply -f /etc/kubernetes/yml/kubernetes-dashboard.yaml
+

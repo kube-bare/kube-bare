@@ -1,0 +1,52 @@
+global
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+    # Default SSL material locations
+    ca-base /etc/kubernetes/pki
+    crt-base /etc/kubernetes/pki
+
+    ssl-default-bind-ciphers EECDH+AES:EECDH+CHACHA20
+    ssl-default-bind-options no-sslv3
+
+defaults
+    log /dev/log local0
+    #log 127.0.0.1 local0 debug
+    mode tcp
+    retries 1
+    #option httplog                  # 日志类别http日志格式
+    option tcplog
+    option dontlognull            # 不记录健康检查的日志信息
+    option redispatch            # serverid对应服务器宕掉后,强制定向到其他健康的服务器
+    option abortonclose         #当服务器负载很高的话,自动结束到当前处理比较久的连接
+    maxconn 2000000
+    timeout connect 3s
+    timeout client  6s
+    timeout server  6s
+
+listen admin_stats
+    bind 0.0.0.0:1080
+    mode http
+    option httplog
+    maxconn 1000
+    stats refresh 30s
+    stats uri /haproxy.status    # curl '127.0.0.1:1080/haproxy.status;csv'
+    stats realm Haproxy
+
+listen kube
+    bind 0.0.0.0:8443
+    mode tcp
+    retries 3
+    option tcplog
+    option tcp-check
+#    server kube-1 10.1.6.101:6443 maxconn 10240 check inter 1s
+#    server kube-2 10.1.6.102:6443 maxconn 10240 check inter 1s
+#    server kube-3 10.1.6.103:6443 maxconn 10240 check inter 1s
+{% for item in groups['lb'] %}    {{"server kube-" + loop.index|string + "  "  + item + ":6443 maxconn 10240 check inter 1s" '\n'}}{% endfor %}
+

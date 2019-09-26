@@ -1,0 +1,20 @@
+- name: gather ip info
+  setup:
+  when: "ansible_default_ipv4 is not defined"
+
+- name: copy haproxy.cfg
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: copy keepalived.conf
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: systemctl enable haproxy keepalived
+  shell: systemctl enable haproxy keepalived
+
+- name: systemctl restart haproxy keepalived
+  shell: systemctl restart haproxy keepalived
+

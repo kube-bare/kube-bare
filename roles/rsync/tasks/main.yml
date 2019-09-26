@@ -1,0 +1,25 @@
+
+- name: mkdir ~/blobs 
+  file:
+      path: ~/blobs 
+      state: directory 
+
+
+- name: Synchronization of src on the control machine to dest on the remote hosts
+  synchronize:
+    src: ./blobs/
+    dest: ~/blobs/
+  tags: 
+    - rsync
+
+- name: untar etcd
+  shell: "tar zxfv blobs/etcd-{{etcd}}-linux-amd64.tar.gz --strip-components=1 --exclude=Documentation --exclude=READ* -C /usr/local/bin"
+
+- name: untar etcdctl
+  shell: "tar zxfv blobs/etcd-{{etcd}}-linux-amd64.tar.gz --strip-components=1 etcd-{{etcd}}-linux-amd64/etcdctl -C /usr/local/bin"
+
+- name: untar helm
+  shell: "tar zxfv blobs/helm-{{helm}}-linux-amd64.tar.gz --strip-components=1 --exclude=LICENSE --exclude=README.md -C /usr/local/bin"
+
+- name: untar istio
+  shell: "tar zxfv blobs/istio-{{istio}}-linux.tar.gz --strip-components=2 --exclude=install --exclude=samples --exclude=tools --exclude=LICENSE --exclude=README.md -C /usr/local/bin "

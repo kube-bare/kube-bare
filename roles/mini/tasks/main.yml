@@ -1,0 +1,44 @@
+- name: gather ip info
+  setup:
+  when: "ansible_default_ipv4 is not defined"
+
+- name: get k8s node ipv4
+  shell: ip -4 route get 8.8.8.8 | head -1 | awk '{print $7}'
+  register: k8s_node_ipv4
+
+- debug: var=k8s_node_ipv4.stdout.strip()
+
+- name: kubeadm reset --force
+  shell: kubeadm reset --force
+
+- name: kubeadm reset node
+  shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && ipvsadm --clear && systemctl restart kubelet
+
+- name: mkdir k8s conf dir
+  shell: test -d /etc/kubernetes/yml || mkdir -p /etc/kubernetes/yml
+
+- name: copy init yml to config dir
+  template:
+    src: kube.yml.j2
+    dest: /etc/kubernetes/yml/kube.yml
+
+- name: copy flannel yml to config dir
+  template:
+    src: kube-flannel.yml.j2
+    dest: /etc/kubernetes/yml/kube-flannel.yml
+
+- name: kube int dry-run
+  shell: kubeadm init --config /etc/kubernetes/yml/kube.yml --dry-run
+
+- name: kube int 
+  shell: kubeadm init --config /etc/kubernetes/yml/kube.yml
+
+- name: mkdir kubectl conf dir
+  shell: mkdir -p /root/.kube
+
+- name: init kubectl conf file
+  shell: test -f /root/.kube/config || ln -s /etc/kubernetes/admin.conf  /root/.kube/config
+
+- name: kube cni 
+  shell: kubectl create -f /etc/kubernetes/yml/kube-flannel.yml
+

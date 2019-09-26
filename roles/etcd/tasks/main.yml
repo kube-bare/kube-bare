@@ -1,0 +1,98 @@
+# - name: gather ip info
+#   setup:
+#   when: "ansible_default_ipv4 is not defined"
+
+# - name: Display all variables/facts known for a host
+#   debug:
+#     var: hostvars[inventory_hostname]
+#   tags: debug_info
+
+
+# - name: get index of etcd
+#   shell: "echo {{item}} "
+#   with_items: "{{ groups.etcd }}"
+#   register: items
+#   when: item ==  (inventory_hostname)
+
+# - debug: var=items
+
+
+- name: mkdir k8s conf dir
+  file:
+      path: /etc/kubernetes/yml  
+      state: directory 
+
+- name: copy kube-etcd.yml
+  template:
+    src: kube-etcd.yml.j2
+    dest: /etc/kubernetes/yml/kube-etcd.yml
+
+- name: copy etcd.env
+  template:
+    src: etcd.env.j2
+    dest: /etc/default/etcd.env
+
+- name: copy etcd.service
+  template:
+    src: etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+
+- name: make certs for etcd-ca
+  shell: kubeadm init phase certs etcd-ca --config /etc/kubernetes/yml/kube-etcd.yml
+  when: (inventory_hostname) == groups.etcd[0]
+
+- name: make certs for etcd-server
+  shell: kubeadm init phase certs etcd-server --config /etc/kubernetes/yml/kube-etcd.yml
+  when: (inventory_hostname) == groups.etcd[0]
+
+- name: make certs for etcd-peer
+  shell: kubeadm init phase certs etcd-peer --config /etc/kubernetes/yml/kube-etcd.yml
+  when: (inventory_hostname) == groups.etcd[0]
+
+- name: make certs for etcd-healthcheck-client
+  shell: kubeadm init phase certs etcd-healthcheck-client --config /etc/kubernetes/yml/kube-etcd.yml
+  when: (inventory_hostname) == groups.etcd[0]
+
+- name: make certs for apiserver-etcd-client
+  shell: kubeadm init phase certs apiserver-etcd-client --config /etc/kubernetes/yml/kube-etcd.yml
+  when: (inventory_hostname) == groups.etcd[0]
+
+- name: rsync certs for etcd
+  synchronize:
+    src: /etc/kubernetes/pki/etcd/
+    dest: /etc/kubernetes/pki/etcd/
+  delegate_to: "{{ groups.etcd[0]}}"
+
+- name: pull etcd docker image
+  shell: docker pull gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.1')}}"
+
+- name : docker rm etcd-bin
+  shell: docker stop etcd-bin; docker rm etcd-bin -f
+  ignore_errors: yes
+
+- name : docker run etcd-bin
+  shell: docker run -d --rm --name etcd-bin gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.1')}}" etcd
+
+- name: cp etcd from docker
+  shell:  docker cp etcd-bin:/usr/local/bin/etcd /usr/local/bin/
+
+- name: cp etcdctl from docker
+  shell:  docker cp etcd-bin:/usr/local/bin/etcdctl /usr/local/bin/
+
+- name : docker stop etcd-bin
+  shell: docker stop etcd-bin
+
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+
+- name: systemctl enable etcd
+  shell: systemctl enable etcd
+
+- name: systemctl restart etcd
+  shell: systemctl restart etcd
+
+- name: etcdctl member list
+  shell: ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/peer.crt --key=/etc/kubernetes/pki/etcd/peer.key --endpoints=https://127.0.0.1:2379 member list
+  register: etcdctl_member_list
+
+- debug: var=etcdctl_member_list

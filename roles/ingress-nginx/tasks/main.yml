@@ -1,0 +1,19 @@
+- name: copy ingress-nginx-mandatory.yaml
+  template:
+    src: ingress-nginx-mandatory.yaml.j2
+    dest: /etc/kubernetes/yml/ingress-nginx-mandatory.yaml
+
+- name: copy ingress-nginx-service-nodeport.yaml
+  template:
+    src: ingress-nginx-service-nodeport.yaml.j2
+    dest: /etc/kubernetes/yml/ingress-nginx-service-nodeport.yaml
+
+- name: sed ingress-nginx-mandatory.yaml
+  shell: sed -i -e 's?quay.io?quay.azk8s.cn?g' -e 's?k8s.gcr.io?gcr.azk8s.cn/google-containers?g' /etc/kubernetes/yml/ingress-nginx-mandatory.yaml
+
+- name: kubectl ingress-nginx-mandatory.yaml
+  shell: kubectl apply -f /etc/kubernetes/yml/ingress-nginx-mandatory.yaml
+
+- name: kubectl ingress-nginx-service-nodeport.yaml
+  shell: kubectl apply -f /etc/kubernetes/yml/ingress-nginx-service-nodeport.yaml
+

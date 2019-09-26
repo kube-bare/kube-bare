@@ -1,0 +1,87 @@
+- name: pwd
+  shell: pwd
+  register: pwd
+
+# - debug: var=pwd.stdout.strip()
+# - debug: var=ansible_host
+
+# - debug: var=etcd
+# - debug: var=helm
+# - debug: var=istio
+
+# - name: mkdir ./blobs 
+#   file:
+#       path: ./blobs 
+#       state: directory 
+
+# - debug: 
+#     msg: "{{pwd.stdout.strip()}}/blobs/etcd-{{etcd}}-linux-amd64.tar.gz"
+
+- name: stat etcd binary
+  stat:
+    path: "{{pwd.stdout.strip()}}/blobs/etcd-{{etcd}}-linux-amd64.tar.gz"
+  register: stat_ectd
+
+
+- name: stat helm binary
+  stat:
+    path: "{{pwd.stdout.strip()}}/blobs/helm-{{helm}}-linux-amd64.tar.gz"
+  register: stat_helm
+
+- name: stat istio binary
+  stat:
+    path: "{{pwd.stdout.strip()}}/blobs/istio-{{istio}}-linux.tar.gz"
+  register: stat_istio
+
+# - debug: var=stat_ectd.stat
+# - debug: var=stat_helm.stat
+# - debug: var=stat_istio.stat
+
+# - debug:
+#     msg: "blobs_checksum.etcd_amd64_{{etcd}}.value"
+
+## todo fix
+
+- name: download etcd
+  get_url:
+      dest: ./blobs/ 
+      url: "http://192.168.10.1:8000/pub/download/{{etcd}}/etcd-{{etcd}}-linux-amd64.tar.gz"
+      #url: "https://github.com/etcd-io/etcd/releases/download/{{etcd}}/etcd-{{etcd}}-linux-amd64.tar.gz" 
+      checksum: "blobs_checksum_amd64.etcd.get({{etcd}}).value"
+      timeout: 10
+#  with_items: "{{ blobs_checksum_amd64.etcd }}"
+  when: stat_ectd.stat.exists == False
+  tags: etcd
+
+
+# # download https://github.com/etcd-io/etcd/releases/download/v3.3.13/etcd-v3.3.13-linux-amd64.tar.gz
+# - name: download etcd
+#   get_url:
+#       dest: ./blobs/ 
+#       url: "https://github.com/etcd-io/etcd/releases/download/{{item.key}}/etcd-{{item.key}}-linux-amd64.tar.gz" 
+#       checksum: "{{item.value}}"
+#       timeout: 10
+#   with_dict: "{{ blobs_checksum_amd64.etcd }}"
+#   when: stat_ectd.stat.exists == False and item.key == (etcd)
+#   tags: etcd
+
+# - name: download helm
+#   get_url:
+#       dest: ./blobs/ 
+#       url: "https://get.helm.sh/helm-{{item.key}}-linux-amd64.tar.gz"
+#       checksum: "{{item.value}}"
+#       timeout: 10
+#   with_dict: "{{ blobs_checksum_amd64.helm }}"
+#   when: item.key == (helm) and stat_helm.stat.exists == False
+#   tags: helm
+
+# - name: download istio
+#   get_url:
+#       dest: ./blobs/ 
+#       url: "https://github.com/istio/istio/releases/download/{{item.key}}/istio-{{item.key}}-linux.tar.gz"
+#       checksum: "{{item.value}}"
+#       timeout: 10
+#   with_dict: "{{ blobs_checksum_amd64.istio }}"
+#   when: item.key == (istio) and stat_istio.stat.exists == False
+#   tags: istio
+

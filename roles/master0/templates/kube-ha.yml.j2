@@ -1,0 +1,53 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: InitConfiguration
+# allow master run pods
+nodeRegistration:
+  taints:
+  - effect: PreferNoSchedule
+    key: node-role.kubernetes.io/master
+  kubeletExtraArgs:
+    pod-infra-container-image: gcr.azk8s.cn/google_containers/pause-amd64:3.1
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "ipvs"
+ipvs:
+    excludeCIDRs: 
+    - "{{lb_endpoint_addr}}/32"
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+# version: stable,v1.15.1,
+kubernetesVersion: stable
+controllerManager:
+  extraArgs:
+    address: 0.0.0.0
+scheduler:
+  extraArgs:
+    address: 0.0.0.0
+networking:
+  podSubnet:     {{ k8s_pod_cidr | default("10.244.0.0/16") }}
+  serviceSubnet: {{ k8s_svc_cidr | default("10.96.0.0/12") }}
+apiServer:
+  certSANs:
+  - k8s
+  - kubernetes
+  - kubernetes.default
+  - kubernetes.default.svc
+  - kubernetes.default.svc.cluster
+  - kubernetes.default.svc.cluster.local
+  - 10.96.0.1
+  - 127.0.0.1
+{% for item in groups['master'] %}  - {{item + '\n'}}{% endfor %}
+{% for item in groups['master'] %}  - {{hostvars[item]["ansible_fqdn"]  + '\n'}}{% endfor %}
+controlPlaneEndpoint: {{lb_endpoint_addr}}:{{lb_endpoint_port}}
+etcd:
+    external:
+        caFile: /etc/kubernetes/pki/etcd/ca.crt
+        certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
+        keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
+        endpoints:
+{% for item in groups['master'] %}        - {{"https://" + item + ":2379" + '\n'}}{% endfor %}
+
+imageRepository: "gcr.azk8s.cn/google_containers"

@@ -1,0 +1,64 @@
+---
+# to install a mini single node cluster for dev or test environment 
+#- hosts: mini
+- hosts: "{{ hosts | default('master')}}"
+  gather_facts: smart
+  remote_user: root
+
+  vars_prompt:
+    - name: prompt_kubeadm_reset
+      prompt: "install a NEW Production Ready HA Cluster for Kubernetes, are you SURE?[N/Y]"
+      private: no
+      default: "N"
+
+
+
+  # steps:
+  # - init
+  # - etcd
+  # - lb-haproxy
+  # - lb-keeplived
+  # - calico-rr
+  # - master0
+  # - cni
+  # - master-other
+  # - node
+  # - status
+
+# download all files to localhost ./blobs dir 
+# - hosts: localhost
+#   connection: local
+#   gather_facts: no
+#   roles:
+#    - blobs
+
+- hosts: "{{ etcd | default('etcd') }}"
+  gather_facts: smart
+  remote_user: root
+  roles:
+    - { role: cleanup }
+
+- hosts: "{{ master | default('master') }}"
+  gather_facts: smart
+  remote_user: root
+  roles:
+    - { role: cleanup }
+
+
+- hosts: "{{ etcd | default('etcd') }}"
+  gather_facts: smart
+  remote_user: root
+  roles:
+    - { role: etcd }
+
+
+- hosts: "{{ master | default('master') }}"
+  gather_facts: smart
+  remote_user: root
+  roles:
+    - { role: init }
+    - { role: lb }
+    - { role: master0 }
+    - { role: cni }
+    - { role: masters }
+

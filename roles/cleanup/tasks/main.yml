@@ -1,0 +1,29 @@
+# - debug: var=reset_force_etcd
+
+# - debug: var=reset_force_k8s
+
+- ping:
+
+- name: clean  etcd
+  shell: ps -ef | grep etcd | grep -v grep && ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/peer.crt --key=/etc/kubernetes/pki/etcd/peer.key --endpoints=https://127.0.0.1:2379 del "" --prefix
+  when: (reset_force_etcd) is defined and  (reset_force_etcd.upper()) == "YES"
+  delegate_to: "{{ groups.etcd[0]}}"
+  ignore_errors: yes
+
+- name: clean  etcd data
+  shell:  rm -rf /var/lib/etcd/default/*
+  when: (reset_force_etcd) is defined and  (reset_force_etcd.upper()) == "YES" and inventory_hostname in groups['etcd']
+#  delegate_to: "{{ groups.etcd[0]}}"
+
+- name: systemctl stop etcd
+  shell: systemctl stop etcd
+  when: (reset_force_etcd) is defined and  (reset_force_etcd.upper()) == "YES" and inventory_hostname in groups['etcd']
+
+- name: kubeadm reset --force
+  shell: kubeadm reset --force
+  when: (reset_force_k8s) is defined and  (reset_force_k8s.upper()) == "YES" and inventory_hostname in groups['master']
+#  delegate_to: "{{ groups.master[0]}}"
+
+- name: kubeadm reset node
+  shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X && ipvsadm --clear && systemctl restart kubelet
+  when: (reset_force_k8s) is defined and  (reset_force_k8s.upper()) == "YES" and inventory_hostname in groups['master']
