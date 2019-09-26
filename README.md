@@ -60,14 +60,14 @@ sudo pip3 install -r requirements.txt
 ## OPTION: deploy kubernetes on local server as single node
 
 ```bash
-ansible-playbook mini.yml
+ansible-playbook deploy-single-node.yml
 
 ```
 
 ## OPTION: deploy kubernetes on remote server as single node
 
 ```bash
-ansible-playbook mini.yml -e "hosts=1.2.3.4"
+ansible-playbook deploy-single-node.yml -e "hosts=1.2.3.4"
 ```
 
 ## OPTION: depoly kubernetes for a Production Ready HA cluster
@@ -78,5 +78,6 @@ cp inventory/inventory.example inventory/inventory.prod
 ## add hosts for etcd,lb,masters,nodes 
 vi inventory.prod   
 
-ansible-playbook -i inventory/inventory.prod ha.yml
+ansible-playbook -i inventory/inventory.prod deploy-ha-cluster.yml
+
 ```
