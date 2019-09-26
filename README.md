@@ -5,12 +5,12 @@ Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 
 + centos 8
 + debian 10
-+ ubuntu 18.04
++ ubuntu lts 18.04
 
 # support kubernetes
 
-+ kube-bare v1.15     kubernetes v1.15.x 
-+ kube-bare v1.16     kubernetes v1.16.x  
++ kube-bare v1.15.x for  kubernetes v1.15
++ kube-bare v1.16.x for  kubernetes v1.16 
 
 # support cni
 
