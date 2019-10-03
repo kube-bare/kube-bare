@@ -3,7 +3,7 @@ Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 
 # support os
 
-+ centos 8
++ centos 8  (TBD)
 + debian 10
 + ubuntu lts 18.04
 
@@ -23,7 +23,7 @@ Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 # support special networks
 
 + china 
-+ offline
++ offline (TBD)
 
 # install packages 
 
