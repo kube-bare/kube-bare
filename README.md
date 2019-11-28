@@ -1,18 +1,19 @@
 # kube-bare
 Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 
-# support os
+## ROADMAP
+### support os
 
 + centos 8  (TBD)
 + debian 10
 + ubuntu lts 18.04
 
-# support kubernetes
+### support kubernetes
 
 + kube-bare v1.15.x for  kubernetes v1.15
 + kube-bare v1.16.x for  kubernetes v1.16 
 
-# support cni
+### support cni
 
 + cilium
 + calico
@@ -20,12 +21,12 @@ Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 + kube-router
 + kube-ovn
 
-# support special networks
+### support special networks
 
 + china 
 + offline (TBD)
 
-# install packages 
+### install packages 
 
 + docker-ce
 + kubeadm
@@ -37,16 +38,7 @@ Deploy a Production Ready Kubernetes Cluster on Bere-Metal or On-Premise
 + kubernetes masters
 + kubernetes nodes
 
-# support addons
 
-+ cephfs-provisioner v2.1.0-k8s1.11
-+ rbd-provisioner v2.1.1-k8s1.11
-+ cert-manager v0.5.2
-+ ingress-nginx v0.21.0
-+ istio
-+ sofa-mesh
-+ prometheus
-+ argo-cd
 
 ## quick start
 
