@@ -2,6 +2,9 @@
   setup:
   when: "ansible_default_ipv4 is not defined"
 
+- name: mkdir -p /etc/haproxy /etc/keepalived
+  shell: mkdir -p /etc/haproxy /etc/keepalived
+
 - name: copy haproxy.cfg
   template:
     src: haproxy.cfg.j2
