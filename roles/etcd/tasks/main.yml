@@ -64,14 +64,14 @@
   delegate_to: "{{ groups.etcd[0]}}"
 
 - name: pull etcd docker image
-  shell: docker pull gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.1')}}"
+  shell: docker pull gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.3')}}"
 
 - name : docker rm etcd-bin
   shell: docker stop etcd-bin; docker rm etcd-bin -f
   ignore_errors: yes
 
 - name : docker run etcd-bin
-  shell: docker run -d --rm --name etcd-bin gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.1')}}" etcd
+  shell: docker run -d --rm --name etcd-bin gcr.azk8s.cn/etcd-development/etcd:"{{ etcd | default('v3.4.3')}}" etcd
 
 - name: cp etcd from docker
   shell:  docker cp etcd-bin:/usr/local/bin/etcd /usr/local/bin/
