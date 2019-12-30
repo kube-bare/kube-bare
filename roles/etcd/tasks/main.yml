@@ -79,6 +79,9 @@
 - name: cp etcdctl from docker
   shell:  docker cp etcd-bin:/usr/local/bin/etcdctl /usr/local/bin/
 
+- name : rm -rf /etc/systemd/system/etcd.service.d
+  shell: rm -rf /etc/systemd/system/etcd.service.d
+  
 - name : docker stop etcd-bin
   shell: docker stop etcd-bin
 
