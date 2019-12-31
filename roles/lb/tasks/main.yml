@@ -1,6 +1,28 @@
 - name: gather ip info
   setup:
   when: "ansible_default_ipv4 is not defined"
+  
+# install package 
+
+- name: apt install base packages
+  apt: 
+    name:
+      - haproxy
+      - keepalived
+      - ipvsadm
+    state: present
+  # tags:
+  #   - packages
+  when: ansible_os_family == "Debian"
+
+- name: yum install a list of packages
+  yum:
+    name:
+      - haproxy
+      - keepalived
+      - ipvsadm
+    state: present
+  when: ansible_os_family == "CentOS"
 
 - name: mkdir -p /etc/haproxy /etc/keepalived
   shell: mkdir -p /etc/haproxy /etc/keepalived
