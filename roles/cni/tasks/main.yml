@@ -35,7 +35,7 @@
   delegate_to: "{{ groups.master[0]}}"
 
 - name: sed yaml
-  shell: sed -i -e 's?quay.io?quay.azk8s.cn?g' -e 's?k8s.gcr.io?gcr.azk8s.cn/google-containers?g' -e 's?image: calico?image: dockerhub.azk8s.cn/calico?g' /etc/kubernetes/yml/calico-typha.yaml
+  shell: "sed -i -e 's?quay.io?quay.azk8s.cn?g' -e 's?k8s.gcr.io?gcr.azk8s.cn/google-containers?g' -e 's?image: calico?image: dockerhub.azk8s.cn/calico?g' /etc/kubernetes/yml/calico-typha.yaml"
   when: (cni) == "calico"
   delegate_to: "{{ groups.master[0]}}"
 
