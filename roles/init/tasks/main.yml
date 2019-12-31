@@ -157,6 +157,7 @@
       - docker-ce
       - kubeadm
       - ipset
+      - ipvsadm
       - etcd-client
       - rsync
     state: present
@@ -170,6 +171,7 @@
       - docker-ce
       - kubeadm
       - ipset
+      - ipvsadm
       - rsync
     state: present
   when: ansible_os_family == "CentOS"
