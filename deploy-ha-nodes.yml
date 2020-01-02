@@ -7,4 +7,5 @@
 
   roles:
   - init
+  - cleanup
   - nodes
